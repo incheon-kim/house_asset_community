@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" 
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ssafy.happyhouse.model.mapper.HouseMapMapper">
+	<select id="getSido" resultType="sidoGugunCodeDto">
+		select sidoCode, sidoName
+		from SIDO
+		order by sidoCode
+	</select>
+	
+	<select id="getGugunInSido" parameterType="string" resultType="sidoGugunCodeDto">
+		select sggCode as gugunCode, name as gugunName, sidoCode
+		from SIGUNGU
+		where sidoCode = #{sidoCode}
+		order by sggCode
+	</select>
+	
+	<select id="getUmdInGugun" parameterType="string" resultType="sidoGugunCodeDto">
+		select umdCode, umdName
+		from UMD
+		where sidoCode = #{sido} and sggCode = #{gugun}
+	</select>
+	
+	<insert id="addTrade" parameterType="List">
+		insert into TRADE (aptCode, constructYear, tradeDate, price, floor, mainCode, subCode, area, apt, bonbun, bubun, dong, lat, rng, deepLink)
+		values
+		<foreach collection="list" item="trade" separator=",">
+			(#{trade.aptCode}, #{trade.constructYear}, #{trade.tradeDate}, #{trade.price}, #{trade.floor}, #{trade.mainCode}, #{trade.subCode}, #{trade.area}, #{trade.apt}, #{trade.bonbun}, #{trade.bubun}, #{trade.dong}, #{trade.lat}, #{trade.rng}, #{trade.deepLink}) 
+		</foreach>
+	</insert>
+	
+	<select id="getTradeByAddress" resultType="TradeDto">
+		select *
+		from TRADE
+		<where>
+			mainCode = CONCAT(#{sido}, #{gugun})
+			<if test="umd != null">
+				and SUBSTR(subCode,1,3) = #{umd}
+			</if>
+			and (DATE_FORMAT(tradeDate, "%Y") BETWEEN ${year} and ${year})
+			and (DATE_FORMAT(tradeDate, "%m") BETWEEN ${month} and ${month})
+		</where>
+	</select>
+	
+	<select id="getTradeByName" resultType="TradeDto">
+		select *
+		from TRADE
+		<where>
+			apt like CONCAT('%', #{name}, '%')
+			and (DATE_FORMAT(tradeDate, "%Y") BETWEEN ${year} and ${year})
+			and (DATE_FORMAT(tradeDate, "%m") BETWEEN ${month} and ${month})
+		</where>
+	</select>
+	
+	<select id="getAddressFromCode" resultType="String">
+		select CONCAT(SIDO.sidoName, ' ', SIGUNGU.name) from
+		SIDO left join SIGUNGU on SIDO.sidoCode = SIGUNGU.sidoCode
+		where SIDO.sidoCode = #{sido} and SIGUNGU.sggCode = #{gugun};
+	</select>
+</mapper>
